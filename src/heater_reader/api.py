@@ -2,7 +2,10 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Request, Response, HTTPException
 from fastapi.responses import HTMLResponse
 from heater_reader.db import Database
+from heater_reader.config import load_config
 from pathlib import Path
+from pydantic import BaseModel
+import yaml
 
 router = APIRouter()
 
@@ -44,3 +47,34 @@ def snapshot(request: Request):
 
     cache.set(data, width=width, height=height, captured_at=now)
     return Response(content=data, media_type="image/jpeg")
+
+
+class CropPayload(BaseModel):
+    x: int
+    y: int
+    w: int
+    h: int
+
+
+@router.get("/api/crop")
+def get_crop(request: Request):
+    cfg = load_config(request.app.state.config_path)
+    return cfg.capture.crop
+
+
+@router.post("/api/crop")
+def set_crop(payload: CropPayload, request: Request):
+    if payload.w <= 0 or payload.h <= 0 or payload.x < 0 or payload.y < 0:
+        raise HTTPException(status_code=400, detail="invalid_crop")
+
+    config_path = request.app.state.config_path
+    raw = yaml.safe_load(config_path.read_text()) if config_path.exists() else {}
+    raw = raw or {}
+    raw.setdefault("capture", {})["crop"] = {
+        "x": payload.x,
+        "y": payload.y,
+        "w": payload.w,
+        "h": payload.h,
+    }
+    config_path.write_text(yaml.safe_dump(raw, sort_keys=False))
+    return raw["capture"]["crop"]
