@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Request
+from fastapi.responses import HTMLResponse
 from heater_reader.db import Database
+from pathlib import Path
 
 router = APIRouter()
 
@@ -15,3 +17,8 @@ def readings(request: Request):
     rows = db.list_effective_readings()
     return [dict(row) for row in rows]
 
+
+@router.get("/")
+def index():
+    html = Path(__file__).parent / "static" / "index.html"
+    return HTMLResponse(html.read_text())
