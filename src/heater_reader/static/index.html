@@ -8,6 +8,18 @@
   <body>
     <h1>Boiler Monitor</h1>
     <canvas id="temps"></canvas>
+    <section id="crop-setup">
+      <h2>Crop Setup</h2>
+      <button id="load-snapshot">Load Latest Snapshot</button>
+      <button id="save-crop" disabled>Save Crop</button>
+      <div style="position: relative; display: inline-block;">
+        <img id="snapshot" alt="Latest snapshot" />
+        <div
+          id="crop-rect"
+          style="position: absolute; border: 2px solid red; display: none;"
+        ></div>
+      </div>
+    </section>
     <script>
       async function loadData() {
         const response = await fetch("/api/readings");
