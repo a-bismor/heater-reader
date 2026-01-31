@@ -16,3 +16,17 @@ def test_insert_and_fetch_reading(tmp_path):
     row = db.get_reading(reading_id)
     assert row["boiler_current"] == 45
     assert row["mode"] == "PRACA"
+
+
+def test_effective_readings_use_edits(tmp_path):
+    db = Database(tmp_path / "db.sqlite")
+    db.init_schema()
+
+    reading_id = db.insert_reading(
+        ReadingText(45, 55, 42, 50, "PRACA"),
+        image_path="path.jpg",
+    )
+    db.insert_edit(reading_id, boiler_current=47, edited_by="adam")
+
+    row = db.get_effective_reading(reading_id)
+    assert row["boiler_current"] == 47

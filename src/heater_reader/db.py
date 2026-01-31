@@ -74,3 +74,72 @@ class Database:
         with self._connect() as conn:
             cur = conn.execute("SELECT * FROM readings WHERE id = ?", (reading_id,))
             return cur.fetchone()
+
+    def insert_edit(
+        self,
+        reading_id: int,
+        boiler_current: int | None = None,
+        boiler_set: int | None = None,
+        radiator_current: int | None = None,
+        radiator_set: int | None = None,
+        mode: str | None = None,
+        edited_by: str = "adam",
+    ) -> int:
+        with self._connect() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO edits (reading_id, boiler_current, boiler_set, radiator_current, radiator_set, mode, edited_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    reading_id,
+                    boiler_current,
+                    boiler_set,
+                    radiator_current,
+                    radiator_set,
+                    mode,
+                    edited_by,
+                ),
+            )
+            return int(cur.lastrowid)
+
+    def get_effective_reading(self, reading_id: int):
+        with self._connect() as conn:
+            cur = conn.execute(
+                """
+                SELECT
+                    r.id,
+                    COALESCE(e.boiler_current, r.boiler_current) AS boiler_current,
+                    COALESCE(e.boiler_set, r.boiler_set) AS boiler_set,
+                    COALESCE(e.radiator_current, r.radiator_current) AS radiator_current,
+                    COALESCE(e.radiator_set, r.radiator_set) AS radiator_set,
+                    COALESCE(e.mode, r.mode) AS mode,
+                    r.image_path
+                FROM readings r
+                LEFT JOIN edits e ON e.reading_id = r.id
+                WHERE r.id = ?
+                ORDER BY e.edited_at DESC
+                LIMIT 1
+                """,
+                (reading_id,),
+            )
+            return cur.fetchone()
+
+    def list_effective_readings(self):
+        with self._connect() as conn:
+            cur = conn.execute(
+                """
+                SELECT
+                    r.id,
+                    COALESCE(e.boiler_current, r.boiler_current) AS boiler_current,
+                    COALESCE(e.boiler_set, r.boiler_set) AS boiler_set,
+                    COALESCE(e.radiator_current, r.radiator_current) AS radiator_current,
+                    COALESCE(e.radiator_set, r.radiator_set) AS radiator_set,
+                    COALESCE(e.mode, r.mode) AS mode,
+                    r.captured_at
+                FROM readings r
+                LEFT JOIN edits e ON e.reading_id = r.id
+                ORDER BY r.captured_at ASC
+                """
+            )
+            return cur.fetchall()
