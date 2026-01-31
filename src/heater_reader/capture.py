@@ -3,6 +3,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from heater_reader.ocr_pipeline import extract_text_from_image
 from heater_reader.ocr import parse_reading, ReadingText
+import cv2
+import numpy as np
 
 
 def image_path_for(root: Path, ts: datetime) -> Path:
@@ -42,3 +44,10 @@ class SnapshotCache:
         if captured_at is None:
             captured_at = datetime.now(timezone.utc)
         self._snapshot = Snapshot(data, width, height, captured_at)
+
+
+def encode_frame_to_jpeg(frame: np.ndarray) -> bytes:
+    ok, buf = cv2.imencode(".jpg", frame)
+    if not ok:
+        raise ValueError("Failed to encode frame")
+    return buf.tobytes()
