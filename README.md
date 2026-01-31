@@ -1,5 +1,7 @@
 # Boiler OCR Monitor
 
+Local service that captures boiler LCD images, extracts temperature readings via OCR, stores them in SQLite, and serves a simple web dashboard for graphs and manual corrections.
+
 ## Setup
 1. Create a virtualenv and install requirements.
 2. Create `config.yml` with camera settings.
