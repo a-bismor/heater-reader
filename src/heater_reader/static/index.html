@@ -20,11 +20,13 @@
         ></div>
       </div>
     </section>
+    <table id="readings"></table>
     <script>
       const snapshot = document.getElementById("snapshot");
       const cropRect = document.getElementById("crop-rect");
       const loadBtn = document.getElementById("load-snapshot");
       const saveBtn = document.getElementById("save-crop");
+      const readingsTable = document.getElementById("readings");
       let rect = null;
       let dragStart = null;
 
@@ -51,6 +53,42 @@
         });
       }
       loadData();
+
+      async function loadTable() {
+        const response = await fetch("/api/readings");
+        const data = await response.json();
+        readingsTable.innerHTML =
+          "<tr><th>Time</th><th>Boiler Current</th><th>Boiler Set</th><th>Radiator Current</th><th>Radiator Set</th><th>Mode</th></tr>";
+        for (const row of data) {
+          readingsTable.innerHTML += `<tr>
+            <td>${row.captured_at}</td>
+            <td contenteditable data-field="boiler_current" data-id="${row.id}">${row.boiler_current ?? ""}</td>
+            <td contenteditable data-field="boiler_set" data-id="${row.id}">${row.boiler_set ?? ""}</td>
+            <td contenteditable data-field="radiator_current" data-id="${row.id}">${row.radiator_current ?? ""}</td>
+            <td contenteditable data-field="radiator_set" data-id="${row.id}">${row.radiator_set ?? ""}</td>
+            <td contenteditable data-field="mode" data-id="${row.id}">${row.mode ?? ""}</td>
+          </tr>`;
+        }
+      }
+
+      document.addEventListener(
+        "blur",
+        async (event) => {
+          if (!event.target.dataset.field) return;
+          const field = event.target.dataset.field;
+          const id = event.target.dataset.id;
+          const value = event.target.textContent;
+
+          await fetch(`/api/readings/${id}/edit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ [field]: value, edited_by: "adam" }),
+          });
+        },
+        true
+      );
+
+      loadTable();
 
       loadBtn.addEventListener("click", async () => {
         const resp = await fetch("/api/snapshot");

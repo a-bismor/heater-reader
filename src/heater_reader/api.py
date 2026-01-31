@@ -56,6 +56,15 @@ class CropPayload(BaseModel):
     h: int
 
 
+class EditPayload(BaseModel):
+    boiler_current: int | None = None
+    boiler_set: int | None = None
+    radiator_current: int | None = None
+    radiator_set: int | None = None
+    mode: str | None = None
+    edited_by: str = "adam"
+
+
 @router.get("/api/crop")
 def get_crop(request: Request):
     cfg = load_config(request.app.state.config_path)
@@ -78,3 +87,11 @@ def set_crop(payload: CropPayload, request: Request):
     }
     config_path.write_text(yaml.safe_dump(raw, sort_keys=False))
     return raw["capture"]["crop"]
+
+
+@router.post("/api/readings/{reading_id}/edit")
+def edit_reading(reading_id: int, payload: EditPayload, request: Request):
+    db = Database(request.app.state.db_path)
+    db.insert_edit(reading_id, **payload.model_dump())
+    row = db.get_effective_reading(reading_id)
+    return dict(row)
