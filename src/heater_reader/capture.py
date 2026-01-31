@@ -51,3 +51,14 @@ def encode_frame_to_jpeg(frame: np.ndarray) -> bytes:
     if not ok:
         raise ValueError("Failed to encode frame")
     return buf.tobytes()
+
+
+def fetch_rtsp_snapshot(rtsp_url: str) -> tuple[bytes, int, int]:
+    cap = cv2.VideoCapture(rtsp_url)
+    ok, frame = cap.read()
+    cap.release()
+    if not ok or frame is None:
+        raise RuntimeError("Failed to read RTSP frame")
+    data = encode_frame_to_jpeg(frame)
+    height, width = frame.shape[:2]
+    return data, width, height
