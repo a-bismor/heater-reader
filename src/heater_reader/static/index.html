@@ -16,11 +16,12 @@
         <img
           id="snapshot"
           alt="Latest snapshot"
+          data-max-edge="640"
           style="max-width: 100%; height: auto; display: block;"
         />
         <div
           id="crop-rect"
-          style="position: absolute; border: 2px solid red; display: none;"
+          style="position: absolute; border: 2px solid red; display: none; pointer-events: none;"
         ></div>
       </div>
     </section>
@@ -95,6 +96,20 @@
 
       loadTable();
 
+      function applySnapshotMaxEdge() {
+        const maxEdge = Number(snapshot.dataset.maxEdge || "0");
+        if (!maxEdge || !snapshot.naturalWidth || !snapshot.naturalHeight) {
+          return;
+        }
+        if (snapshot.naturalWidth >= snapshot.naturalHeight) {
+          snapshot.style.width = `${maxEdge}px`;
+          snapshot.style.height = "auto";
+        } else {
+          snapshot.style.height = `${maxEdge}px`;
+          snapshot.style.width = "auto";
+        }
+      }
+
       loadBtn.addEventListener("click", async () => {
         const resp = await fetch("/api/snapshot");
         if (!resp.ok) {
@@ -102,6 +117,10 @@
         }
         const blob = await resp.blob();
         snapshot.src = URL.createObjectURL(blob);
+      });
+
+      snapshot.addEventListener("load", () => {
+        applySnapshotMaxEdge();
       });
 
       function snapshotPos(event) {

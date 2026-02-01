@@ -37,3 +37,21 @@ def test_crop_ui_styles_snapshot_to_fit():
     response = client.get("/")
 
     assert "max-width: 100%" in response.text
+
+
+def test_crop_ui_sets_snapshot_max_edge():
+    app = create_app("data/readings.db")
+    client = TestClient(app)
+
+    response = client.get("/")
+
+    assert "data-max-edge=\"640\"" in response.text
+
+
+def test_crop_ui_crop_rect_ignores_pointer_events():
+    app = create_app("data/readings.db")
+    client = TestClient(app)
+
+    response = client.get("/")
+
+    assert "pointer-events: none" in response.text
