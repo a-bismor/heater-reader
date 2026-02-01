@@ -55,3 +55,21 @@ def test_crop_ui_crop_rect_ignores_pointer_events():
     response = client.get("/")
 
     assert "pointer-events: none" in response.text
+
+
+def test_crop_ui_has_save_message():
+    app = create_app("data/readings.db")
+    client = TestClient(app)
+
+    response = client.get("/")
+
+    assert "id=\"crop-message\"" in response.text
+
+
+def test_crop_ui_rect_has_fill():
+    app = create_app("data/readings.db")
+    client = TestClient(app)
+
+    response = client.get("/")
+
+    assert "background-color: rgba(255, 0, 0" in response.text
