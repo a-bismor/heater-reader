@@ -30,3 +30,12 @@ def test_effective_readings_use_edits(tmp_path):
 
     row = db.get_effective_reading(reading_id)
     assert row["boiler_current"] == 47
+
+
+def test_db_creates_parent_directory_for_string_path(tmp_path):
+    db_path = tmp_path / "data" / "readings.db"
+    db = Database(str(db_path))
+
+    db.init_schema()
+
+    assert db_path.exists()
