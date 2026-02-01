@@ -122,6 +122,12 @@ Run the API locally:
 uvicorn heater_reader.app:create_app --factory --reload
 ```
 
+Seed sample readings from fixtures:
+
+```sh
+PYTHONPATH=src .venv/bin/python scripts/seed_readings.py --db data/readings.db --json fixtures/readings.json
+```
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
