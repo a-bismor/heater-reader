@@ -62,9 +62,22 @@
       const readingsTable = document.getElementById("readings");
       const cropMessage = document.getElementById("crop-message");
       const labelStrip = document.getElementById("label-strip");
+      const readingModal = document.getElementById("reading-modal");
+      const closeModalBtn = document.getElementById("close-modal");
+      const modalError = document.getElementById("modal-error");
+      const modalImage = document.getElementById("modal-image");
+      const modalCaptured = document.getElementById("modal-captured");
+      const modalBoilerCurrent = document.getElementById("modal-boiler-current");
+      const modalBoilerSet = document.getElementById("modal-boiler-set");
+      const modalRadiatorCurrent = document.getElementById("modal-radiator-current");
+      const modalRadiatorSet = document.getElementById("modal-radiator-set");
+      const modalMode = document.getElementById("modal-mode");
+      const saveModalBtn = document.getElementById("save-modal");
       let rect = null;
       let drawStart = null;
       let isDrawing = false;
+      let readingsById = new Map();
+      let activeReadingId = null;
 
       function formatLabel(timestamp) {
         const dt = new Date(timestamp);
@@ -91,9 +104,59 @@
         }
       }
 
+      function openModal(reading) {
+        activeReadingId = reading.id;
+        modalError.textContent = "";
+        modalCaptured.textContent = reading.captured_at;
+        modalImage.src = reading.image_path || "";
+        modalBoilerCurrent.value = reading.boiler_current ?? "";
+        modalBoilerSet.value = reading.boiler_set ?? "";
+        modalRadiatorCurrent.value = reading.radiator_current ?? "";
+        modalRadiatorSet.value = reading.radiator_set ?? "";
+        modalMode.value = reading.mode ?? "";
+        readingModal.style.display = "block";
+      }
+
+      function closeModal() {
+        readingModal.style.display = "none";
+        activeReadingId = null;
+      }
+
+      async function saveModalEdits() {
+        if (!activeReadingId) return;
+        const payload = {
+          boiler_current: modalBoilerCurrent.value === "" ? null : Number(modalBoilerCurrent.value),
+          boiler_set: modalBoilerSet.value === "" ? null : Number(modalBoilerSet.value),
+          radiator_current:
+            modalRadiatorCurrent.value === "" ? null : Number(modalRadiatorCurrent.value),
+          radiator_set: modalRadiatorSet.value === "" ? null : Number(modalRadiatorSet.value),
+          mode: modalMode.value === "" ? null : modalMode.value,
+          edited_by: "adam",
+        };
+        saveModalBtn.disabled = true;
+        modalError.textContent = "";
+        try {
+          const resp = await fetch(`/api/readings/${activeReadingId}/edit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!resp.ok) {
+            modalError.textContent = "Failed to save reading.";
+            return;
+          }
+          closeModal();
+          await loadData();
+          await loadTable();
+        } finally {
+          saveModalBtn.disabled = false;
+        }
+      }
+
       async function loadData() {
         const response = await fetch("/api/readings");
         const data = await response.json();
+        readingsById = new Map(data.map((row) => [String(row.id), row]));
         const labels = data.map((r) => r.captured_at);
         const boilerCurrent = data.map((r) => r.boiler_current);
         const boilerSet = data.map((r) => r.boiler_set);
@@ -163,6 +226,28 @@
       );
 
       loadTable();
+
+      labelStrip.addEventListener("click", (event) => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        const reading = readingsById.get(button.dataset.id);
+        if (!reading) return;
+        openModal(reading);
+      });
+
+      closeModalBtn.addEventListener("click", () => {
+        closeModal();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          closeModal();
+        }
+      });
+
+      saveModalBtn.addEventListener("click", async () => {
+        await saveModalEdits();
+      });
 
       function applySnapshotMaxEdge() {
         const maxEdge = Number(snapshot.dataset.maxEdge || "0");

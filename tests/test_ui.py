@@ -40,3 +40,13 @@ def test_index_html_includes_reading_modal():
 
     assert response.status_code == 200
     assert "id=\"reading-modal\"" in response.text
+
+
+def test_index_html_includes_modal_save_handler():
+    app = create_app("data/readings.db")
+    client = TestClient(app)
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "saveModalEdits" in response.text
