@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from heater_reader.api import router
 from heater_reader.capture import SnapshotCache, fetch_rtsp_snapshot
+from heater_reader.db import Database
 from pathlib import Path
 
 
@@ -10,6 +11,8 @@ def create_app(db_path: str, rtsp_url: str | None = None, config_path: Path | No
     app.state.rtsp_url = rtsp_url
     app.state.config_path = config_path or Path("config.yml")
     app.state.snapshot_cache = SnapshotCache(ttl_seconds=10)
+
+    Database(db_path).init_schema()
 
     def get_snapshot(url: str):
         return fetch_rtsp_snapshot(url)
