@@ -41,9 +41,35 @@
       const saveBtn = document.getElementById("save-crop");
       const readingsTable = document.getElementById("readings");
       const cropMessage = document.getElementById("crop-message");
+      const labelStrip = document.getElementById("label-strip");
       let rect = null;
       let drawStart = null;
       let isDrawing = false;
+
+      function formatLabel(timestamp) {
+        const dt = new Date(timestamp);
+        const dd = String(dt.getDate()).padStart(2, "0");
+        const mm = String(dt.getMonth() + 1).padStart(2, "0");
+        const hh = String(dt.getHours()).padStart(2, "0");
+        const min = String(dt.getMinutes()).padStart(2, "0");
+        return `${dd}-${mm}<br>${hh}:${min}`;
+      }
+
+      function renderLabels(readings) {
+        labelStrip.innerHTML = "";
+        if (!readings.length) {
+          labelStrip.style.gridTemplateColumns = "1fr";
+          return;
+        }
+        labelStrip.style.gridTemplateColumns = `repeat(${readings.length}, 1fr)`;
+        for (const row of readings) {
+          const label = document.createElement("button");
+          label.type = "button";
+          label.dataset.id = row.id;
+          label.innerHTML = formatLabel(row.captured_at);
+          labelStrip.appendChild(label);
+        }
+      }
 
       async function loadData() {
         const response = await fetch("/api/readings");
@@ -65,7 +91,14 @@
               { label: "Radiator Set", data: radiatorSet },
             ],
           },
+          options: {
+            scales: {
+              x: { ticks: { display: false } },
+              y: { min: 10, max: 70 },
+            },
+          },
         });
+        renderLabels(data);
       }
       loadData();
 
