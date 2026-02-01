@@ -170,6 +170,7 @@ class Database:
                     COALESCE(e.radiator_current, r.radiator_current) AS radiator_current,
                     COALESCE(e.radiator_set, r.radiator_set) AS radiator_set,
                     COALESCE(e.mode, r.mode) AS mode,
+                    r.image_path,
                     r.captured_at
                 FROM readings r
                 LEFT JOIN edits e ON e.reading_id = r.id

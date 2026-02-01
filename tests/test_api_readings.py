@@ -17,3 +17,18 @@ def test_readings_endpoint_returns_effective_values(tmp_path):
     response = client.get("/api/readings")
     assert response.status_code == 200
     assert response.json()[0]["boiler_current"] == 47
+
+
+def test_readings_endpoint_includes_image_path(tmp_path):
+    db_path = tmp_path / "db.sqlite"
+    db = Database(db_path)
+    db.init_schema()
+    db.insert_reading(ReadingText(45, 55, 42, 50, "PRACA"), image_path="path.jpg")
+
+    app = create_app(str(db_path))
+    client = TestClient(app)
+
+    response = client.get("/api/readings")
+
+    assert response.status_code == 200
+    assert response.json()[0]["image_path"] == "path.jpg"
