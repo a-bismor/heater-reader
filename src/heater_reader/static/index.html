@@ -8,16 +8,20 @@
   <body>
     <h1>Boiler Monitor</h1>
     <canvas id="temps"></canvas>
-    <section id="crop-setup" data-crop-mode="click">
+    <section id="crop-setup" data-crop-mode="click" style="text-align: center;">
       <h2>Crop Setup</h2>
       <button id="load-snapshot">Load Latest Snapshot</button>
       <button id="save-crop" disabled>Save Crop</button>
-      <span id="crop-message" style="margin-left: 8px; color: #2a7a2a;"></span>
+      <br />
+      <span id="crop-message" style="color: #2a7a2a;"></span>
+      <br />
+      <br />
       <div style="position: relative; display: inline-block; max-width: 100%;">
         <img
           id="snapshot"
           alt="Latest snapshot"
           data-max-edge="640"
+          src="https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60"
           style="max-width: 100%; height: auto; display: block;"
         />
         <div
