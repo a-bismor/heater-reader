@@ -19,3 +19,21 @@ def test_crop_ui_has_snapshot_wiring():
     response = client.get("/")
 
     assert "/api/snapshot" in response.text
+
+
+def test_crop_ui_marks_click_mode():
+    app = create_app("data/readings.db")
+    client = TestClient(app)
+
+    response = client.get("/")
+
+    assert "data-crop-mode=\"click\"" in response.text
+
+
+def test_crop_ui_styles_snapshot_to_fit():
+    app = create_app("data/readings.db")
+    client = TestClient(app)
+
+    response = client.get("/")
+
+    assert "max-width: 100%" in response.text
