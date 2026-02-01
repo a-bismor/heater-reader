@@ -12,6 +12,26 @@
     </div>
     <div id="label-strip" style="display: grid; gap: 8px; margin: 8px 0;"></div>
     <table id="readings" style="display: none;"></table>
+    <div id="reading-modal" style="display: none;">
+      <div id="reading-modal-content">
+        <button id="close-modal" type="button">Close</button>
+        <div id="modal-error" style="color: #b00020;"></div>
+        <img id="modal-image" alt="Reading image" />
+        <div id="modal-captured"></div>
+        <label>
+          Boiler Current <input id="modal-boiler-current" type="number" />
+        </label>
+        <label>Boiler Set <input id="modal-boiler-set" type="number" /></label>
+        <label>
+          Radiator Current <input id="modal-radiator-current" type="number" />
+        </label>
+        <label>
+          Radiator Set <input id="modal-radiator-set" type="number" />
+        </label>
+        <label>Mode <input id="modal-mode" type="text" /></label>
+        <button id="save-modal" type="button">Save</button>
+      </div>
+    </div>
     <section id="crop-setup" data-crop-mode="click" style="text-align: center;">
       <h2>Crop Setup</h2>
       <button id="load-snapshot">Load Latest Snapshot</button>
