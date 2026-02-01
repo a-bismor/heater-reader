@@ -75,6 +75,35 @@ class Database:
             )
             return int(cur.lastrowid)
 
+    def insert_seed_reading(
+        self,
+        captured_at: str,
+        boiler_current: int | None,
+        boiler_set: int | None,
+        radiator_current: int | None,
+        radiator_set: int | None,
+        mode: str,
+        image_path: str,
+    ) -> int:
+        with self._connect() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO readings (
+                    captured_at, boiler_current, boiler_set, radiator_current, radiator_set, mode, image_path
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    captured_at,
+                    boiler_current,
+                    boiler_set,
+                    radiator_current,
+                    radiator_set,
+                    mode,
+                    image_path,
+                ),
+            )
+            return int(cur.lastrowid)
+
     def get_reading(self, reading_id: int) -> sqlite3.Row:
         with self._connect() as conn:
             cur = conn.execute("SELECT * FROM readings WHERE id = ?", (reading_id,))

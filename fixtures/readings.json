@@ -1,0 +1,29 @@
+[
+  {
+    "captured_at": "2026-02-01T20:15:00",
+    "boiler_current": 52,
+    "boiler_set": 60,
+    "radiator_current": 38,
+    "radiator_set": 45,
+    "mode": "eco",
+    "image_path": "fixtures/images/IMG_0621.jpg"
+  },
+  {
+    "captured_at": "2026-02-01T20:25:00",
+    "boiler_current": 54,
+    "boiler_set": 60,
+    "radiator_current": 39,
+    "radiator_set": 45,
+    "mode": "eco",
+    "image_path": "fixtures/images/IMG_0622.jpg"
+  },
+  {
+    "captured_at": "2026-02-01T20:35:00",
+    "boiler_current": 55,
+    "boiler_set": 60,
+    "radiator_current": 40,
+    "radiator_set": 45,
+    "mode": "eco",
+    "image_path": "fixtures/images/IMG_0623.jpg"
+  }
+]
