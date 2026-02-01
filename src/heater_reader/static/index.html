@@ -14,15 +14,25 @@
     </div>
     <h1>Boiler Monitor</h1>
     <canvas id="temps"></canvas>
-    <section id="crop-setup">
+    <section id="crop-setup" data-crop-mode="click" style="text-align: center;">
       <h2>Crop Setup</h2>
       <button id="load-snapshot">Load Latest Snapshot</button>
       <button id="save-crop" disabled>Save Crop</button>
-      <div style="position: relative; display: inline-block;">
-        <img id="snapshot" alt="Latest snapshot" />
+      <br />
+      <span id="crop-message" style="color: #2a7a2a;"></span>
+      <br />
+      <br />
+      <div style="position: relative; display: inline-block; max-width: 100%;">
+        <img
+          id="snapshot"
+          alt="Latest snapshot"
+          data-max-edge="640"
+          src="https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60"
+          style="max-width: 100%; height: auto; display: block;"
+        />
         <div
           id="crop-rect"
-          style="position: absolute; border: 2px solid red; display: none;"
+          style="position: absolute; border: 2px solid red; display: none; pointer-events: none; background-color: rgba(255, 0, 0, 0.2);"
         ></div>
       </div>
     </section>
@@ -33,8 +43,10 @@
       const loadBtn = document.getElementById("load-snapshot");
       const saveBtn = document.getElementById("save-crop");
       const readingsTable = document.getElementById("readings");
+      const cropMessage = document.getElementById("crop-message");
       let rect = null;
-      let dragStart = null;
+      let drawStart = null;
+      let isDrawing = false;
 
       async function loadData() {
         const response = await fetch("/api/readings");
@@ -96,6 +108,20 @@
 
       loadTable();
 
+      function applySnapshotMaxEdge() {
+        const maxEdge = Number(snapshot.dataset.maxEdge || "0");
+        if (!maxEdge || !snapshot.naturalWidth || !snapshot.naturalHeight) {
+          return;
+        }
+        if (snapshot.naturalWidth >= snapshot.naturalHeight) {
+          snapshot.style.width = `${maxEdge}px`;
+          snapshot.style.height = "auto";
+        } else {
+          snapshot.style.height = `${maxEdge}px`;
+          snapshot.style.width = "auto";
+        }
+      }
+
       loadBtn.addEventListener("click", async () => {
         const resp = await fetch("/api/snapshot");
         if (!resp.ok) {
@@ -105,41 +131,61 @@
         snapshot.src = URL.createObjectURL(blob);
       });
 
-      snapshot.addEventListener("mousedown", (event) => {
-        if (!snapshot.src) return;
-        const bounds = snapshot.getBoundingClientRect();
-        dragStart = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
-        rect = { x: dragStart.x, y: dragStart.y, w: 0, h: 0 };
-        cropRect.style.display = "block";
-        cropRect.style.left = `${rect.x}px`;
-        cropRect.style.top = `${rect.y}px`;
-        cropRect.style.width = "0px";
-        cropRect.style.height = "0px";
-        saveBtn.disabled = true;
+      snapshot.addEventListener("load", () => {
+        applySnapshotMaxEdge();
       });
 
-      snapshot.addEventListener("mousemove", (event) => {
-        if (!dragStart) return;
+      function snapshotPos(event) {
         const bounds = snapshot.getBoundingClientRect();
-        const x = event.clientX - bounds.left;
-        const y = event.clientY - bounds.top;
+        return { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
+      }
+
+      function updateRect(endPos) {
         rect = {
-          x: Math.min(dragStart.x, x),
-          y: Math.min(dragStart.y, y),
-          w: Math.abs(x - dragStart.x),
-          h: Math.abs(y - dragStart.y),
+          x: Math.min(drawStart.x, endPos.x),
+          y: Math.min(drawStart.y, endPos.y),
+          w: Math.abs(endPos.x - drawStart.x),
+          h: Math.abs(endPos.y - drawStart.y),
         };
         cropRect.style.left = `${rect.x}px`;
         cropRect.style.top = `${rect.y}px`;
         cropRect.style.width = `${rect.w}px`;
         cropRect.style.height = `${rect.h}px`;
-      });
+      }
 
-      snapshot.addEventListener("mouseup", () => {
-        if (!dragStart) return;
-        dragStart = null;
+      snapshot.addEventListener("click", (event) => {
+        if (!snapshot.src) return;
+        const pos = snapshotPos(event);
+        if (!isDrawing) {
+          drawStart = pos;
+          isDrawing = true;
+          rect = { x: drawStart.x, y: drawStart.y, w: 0, h: 0 };
+          cropRect.style.display = "block";
+          cropRect.style.left = `${rect.x}px`;
+          cropRect.style.top = `${rect.y}px`;
+          cropRect.style.width = "0px";
+          cropRect.style.height = "0px";
+          saveBtn.disabled = true;
+          return;
+        }
+        updateRect(pos);
+        isDrawing = false;
+        drawStart = null;
         saveBtn.disabled = !(rect && rect.w > 0 && rect.h > 0);
       });
+
+      snapshot.addEventListener("mousemove", (event) => {
+        if (!isDrawing) return;
+        updateRect(snapshotPos(event));
+      });
+
+      function clearCropSelection() {
+        rect = null;
+        isDrawing = false;
+        drawStart = null;
+        cropRect.style.display = "none";
+        saveBtn.disabled = true;
+      }
 
       saveBtn.addEventListener("click", async () => {
         if (!rect || !snapshot.naturalWidth || !snapshot.naturalHeight) return;
@@ -156,6 +202,8 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+        cropMessage.textContent = "Crop saved.";
+        clearCropSelection();
       });
     </script>
   </body>
