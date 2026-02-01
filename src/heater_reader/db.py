@@ -3,13 +3,18 @@ from dataclasses import dataclass
 from pathlib import Path
 import sqlite3
 from heater_reader.ocr import ReadingText
+from heater_reader.paths import ensure_dir
 
 
 @dataclass
 class Database:
     path: Path
 
+    def __post_init__(self) -> None:
+        self.path = Path(self.path)
+
     def _connect(self) -> sqlite3.Connection:
+        ensure_dir(self.path.parent)
         conn = sqlite3.connect(self.path)
         conn.row_factory = sqlite3.Row
         return conn
