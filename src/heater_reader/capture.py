@@ -5,6 +5,7 @@ from heater_reader.ocr_pipeline import extract_text_from_image
 from heater_reader.ocr import parse_reading, ReadingText
 import cv2
 import numpy as np
+import os
 
 
 def image_path_for(root: Path, ts: datetime) -> Path:
@@ -53,7 +54,21 @@ def encode_frame_to_jpeg(frame: np.ndarray) -> bytes:
     return buf.tobytes()
 
 
-def fetch_rtsp_snapshot(rtsp_url: str) -> tuple[bytes, int, int]:
+def build_opencv_capture_options(rtsp_transport: str | None) -> str | None:
+    if not rtsp_transport:
+        return None
+    return f"rtsp_transport;{rtsp_transport}"
+
+
+def set_opencv_capture_options(rtsp_transport: str | None) -> None:
+    options = build_opencv_capture_options(rtsp_transport)
+    if not options:
+        return
+    os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = options
+
+
+def fetch_rtsp_snapshot(rtsp_url: str, rtsp_transport: str | None = "tcp") -> tuple[bytes, int, int]:
+    set_opencv_capture_options(rtsp_transport)
     cap = cv2.VideoCapture(rtsp_url)
     ok, frame = cap.read()
     cap.release()
